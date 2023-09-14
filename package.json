@@ -1,11 +1,12 @@
 {
-  "name": "knex-snowflake-dialect",
-  "version": "1.0.3",
+  "name": "@luminati-io/knex-snowflake-dialect",
+  "version": "1.0.3-lum.1",
   "description": "knex.js dialect for the Snowflake data warehouse",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "directories": {
-    "lib": "lib"
+    "lib": "lib",
+    "test": "test"
   },
   "scripts": {
     "build": "tsc",
@@ -54,7 +55,7 @@
   "dependencies": {
     "bluebird": "^3.7.2",
     "lodash": "^4.17.15",
-    "snowflake-sdk": "1.6.0"
+    "snowflake-sdk": "1.6.4"
   },
   "peerDependencies": {
     "knex": "^1.0.1"
