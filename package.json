@@ -54,14 +54,8 @@
     ]
   },
   "dependencies": {
-<<<<<<< HEAD
-    "bluebird": "^3.7.2",
-    "lodash": "^4.17.15",
-    "snowflake-sdk": "1.8.0"
-=======
     "lodash": "4.17.21",
     "snowflake-sdk": "1.9.0"
->>>>>>> 1d5b59e... merge PR 43 and add support for streams
   },
   "peerDependencies": {
     "knex": "3.0.1"
