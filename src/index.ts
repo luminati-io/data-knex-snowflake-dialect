@@ -1,6 +1,5 @@
-import * as Bluebird from "bluebird";
 import { Knex, knex } from "knex";
-import { defer, fromPairs, isArray, map, toPairs } from "lodash";
+import { defer, fromPairs, isArray, toPairs } from "lodash";
 import { QueryCompiler } from "./query/QueryCompiler";
 import { SchemaCompiler, TableCompiler } from "./schema";
 import * as ColumnBuilder from "knex/lib/schema/columnbuilder";
@@ -9,10 +8,9 @@ import * as Transaction from "knex/lib/execution/transaction";
 import { promisify } from "util";
 
 export class SnowflakeDialect extends knex.Client {
-  constructor(config = {
-    dialect: "snowflake",
-    driverName: "snowflake-sdk",
-  } as any) {
+  constructor(config) {
+    SnowflakeDialect.prototype.driverName = "snowflake-sdk";
+    SnowflakeDialect.prototype.dialect = "snowflake";
     if (config.connection) {
       if (config.connection.user && !config.connection.username) {
         config.connection.username = config.connection.user;
@@ -48,8 +46,8 @@ export class SnowflakeDialect extends knex.Client {
     };
     return transax;
   }
-  // @ts-ignore
-  queryCompiler(builder: any, formatter: any) {
+
+  queryCompiler(builder: any, formatter?: any) {
     return new QueryCompiler(this, builder, formatter);
   }
 
@@ -80,7 +78,7 @@ export class SnowflakeDialect extends knex.Client {
     columnCompiler.increments = 'int not null autoincrement primary key';
     columnCompiler.bigincrements = 'bigint not null autoincrement primary key';
 
-      columnCompiler.mediumint = (colName: string) => "integer";
+    columnCompiler.mediumint = (colName: string) => "integer";
     columnCompiler.decimal = (colName: string, precision?: number, scale?: number) => {
       if (precision) {
         return ColumnCompiler_MySQL.prototype.decimal(colName, precision, scale);
@@ -113,8 +111,8 @@ export class SnowflakeDialect extends knex.Client {
 
   // Get a raw connection, called by the `pool` whenever a new
   // connection needs to be added to the pool.
-  acquireRawConnection() {
-    return new Bluebird((resolver, rejecter) => {
+  async acquireRawConnection() {
+    return new Promise((resolve, reject) => {
       // @ts-ignore
       const connection = this.driver.createConnection(this.connectionSettings);
       connection.on('error', (err) => {
@@ -124,9 +122,9 @@ export class SnowflakeDialect extends knex.Client {
         if (err) {
           // if connection is rejected, remove listener that was registered above...
           connection.removeAllListeners();
-          return rejecter(err);
+          return reject(err);
         }
-        resolver(connection);
+        resolve(connection);
       });
     });
   }
@@ -154,11 +152,11 @@ export class SnowflakeDialect extends knex.Client {
 
   // Runs the query on the specified connection, providing the bindings
   // and any other necessary prep work.
-  _query(connection: any, obj: any) {
+  async _query(connection: any, obj: any) {
     if (!obj || typeof obj === 'string') obj = { sql: obj };
-    return new Bluebird((resolver: any, rejecter: any) => {
+    return new Promise((resolve: any, reject: any) => {
       if (!obj.sql) {
-        resolver();
+        resolve();
         return;
       }
 
@@ -167,26 +165,37 @@ export class SnowflakeDialect extends knex.Client {
             sqlText: obj.sql,
             binds: obj.bindings,
             complete(err: any, statement: any, rows: any) {
-              if (err) return rejecter(err);
+              if (err) return reject(err);
               obj.response = {rows, statement};
-              resolver(obj);
+              resolve(obj);
             },
             ...obj.options
           };
       connection.execute(queryOptions);
     });
   }
-
+  async _stream(connection: any, obj: any, stream: any){
+    if (!obj.sql)
+        throw new Error('query is empty');
+    return new Promise((resolve: any, reject: any) => {
+        const queryOptions = {sqlText: obj.sql, binds: obj.bindings,
+          ...obj.options};
+        stream.on('error', reject);
+        stream.on('end', resolve);
+        const queryStream = connection.execute(queryOptions).streamRows();
+        queryStream.on('error', (e: Error)=>{
+            stream.emit('error', e);
+            reject(e);
+        });
+        queryStream.pipe(stream);
+    });
+  }
   // Ensures the response is returned in the same format as other clients.
   processResponse(obj: any, runner: any) {
     const resp = obj.response;
     if (obj.output) return obj.output.call(runner, resp);
     if (obj.method === 'raw') return resp;
-    if (obj.method === 'select') {
-      // if (obj.method === 'first') return resp.rows[0];
-      // if (obj.method === 'pluck') return map(resp.rows, obj.pluck);
-      return resp.rows;
-    }
+    if (obj.method === 'select') return resp.rows;
     if (
       obj.method === 'insert' ||
       obj.method === 'update' ||
@@ -195,7 +204,7 @@ export class SnowflakeDialect extends knex.Client {
       if (resp.rows) {
         const method = obj.method === 'insert' ? 'inserte' : obj.method;
         return resp.rows.reduce(
-          (count, row) => count + row[`number of rows ${method}d`],
+          (count: Number, row: Number) => count + row[`number of rows ${method}d`],
           0
         );
       }
@@ -207,7 +216,7 @@ export class SnowflakeDialect extends knex.Client {
     return resp;
   }
 
-  postProcessResponse(result, queryContext) {
+  postProcessResponse(result: any, queryContext: any) {
     if (this.config.postProcessResponse) {
       return this.config.postProcessResponse(result, queryContext);
     }
@@ -229,7 +238,7 @@ export class SnowflakeDialect extends knex.Client {
     return result;
   };
 
-  customWrapIdentifier(value, origImpl, queryContext) {
+  customWrapIdentifier(value: string, origImpl: any, queryContext: any) {
     if (this.config.wrapIdentifier) {
       return this.config.wrapIdentifier(value, origImpl, queryContext);
     }
