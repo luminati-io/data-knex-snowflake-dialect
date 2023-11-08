@@ -204,7 +204,7 @@ export class SnowflakeDialect extends knex.Client {
       if (resp.rows) {
         const method = obj.method === 'insert' ? 'inserte' : obj.method;
         return resp.rows.reduce(
-          (count: Number, row: Number) => count + row[`number of rows ${method}d`],
+          (count: number, row: number) => count + row[`number of rows ${method}d`],
           0
         );
       }
