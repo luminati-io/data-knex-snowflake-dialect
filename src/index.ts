@@ -149,7 +149,11 @@ export class SnowflakeDialect extends knex.Client {
     }
     return false;
   }
-
+  // @ts-ignore:
+  async cancelQuery(connection: any){
+    await connection.runningStatement.cancel();
+  }
+  assertCanCancelQuery(){ return false;}
   // Runs the query on the specified connection, providing the bindings
   // and any other necessary prep work.
   async _query(connection: any, obj: any) {
@@ -160,18 +164,19 @@ export class SnowflakeDialect extends knex.Client {
         return;
       }
 
-      const queryOptions =
-          {
-            sqlText: obj.sql,
-            binds: obj.bindings,
-            complete(err: any, statement: any, rows: any) {
-              if (err) return reject(err);
-              obj.response = {rows, statement};
-              resolve(obj);
-            },
-            ...obj.options
-          };
-      connection.execute(queryOptions);
+      const queryOptions = {
+        sqlText: obj.sql,
+        binds: obj.bindings,
+        complete(err: any, statement: any, rows: any) {
+            delete connection.runningStatement;
+            if (err) return reject(err);
+            obj.response = {rows, statement};
+            resolve(obj);
+        },
+      };
+      const statement = connection.execute(queryOptions);
+      connection.runningStatement = statement;
+      obj.queryContext?.onStatement?.(statement);
     });
   }
   async _stream(connection: any, obj: any, stream: any){
@@ -249,3 +254,7 @@ export class SnowflakeDialect extends knex.Client {
   }
 
 }
+Object.assign(SnowflakeDialect.prototype, {
+  dialect: 'snowflake',
+  driverName: 'snowflake-sdk',
+});
