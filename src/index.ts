@@ -184,7 +184,7 @@ export class SnowflakeDialect extends knex.Client {
         throw new Error('query is empty');
     return new Promise((resolve: any, reject: any) => {
         const queryOptions = {sqlText: obj.sql, binds: obj.bindings,
-          ...obj.options};
+            streamResult: true, ...obj.options};
         stream.on('error', reject);
         stream.on('end', resolve);
         const queryStream = connection.execute(queryOptions).streamRows();
