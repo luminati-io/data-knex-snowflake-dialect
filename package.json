@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "lodash": "4.17.21",
-    "snowflake-sdk": "1.9.0"
+    "@luminati-io/snowflake-sdk": "1.9.2-lum.1"
   },
   "peerDependencies": {
     "knex": "3.0.1"

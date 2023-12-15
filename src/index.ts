@@ -105,7 +105,7 @@ export class SnowflakeDialect extends knex.Client {
   }
 
   _driver() {
-    const Snowflake = require("snowflake-sdk");
+    const Snowflake = require("@luminati-io/snowflake-sdk");
     return Snowflake;
   }
 
