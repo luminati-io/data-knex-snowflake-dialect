@@ -144,10 +144,7 @@ export class SnowflakeDialect extends knex.Client {
   }
 
   async validateConnection(connection: any): Promise<boolean> {
-    if (connection) {
-      return true;
-    }
-    return false;
+    return !!connection && connection.isUp();
   }
   // @ts-ignore:
   async cancelQuery(connection: any){
