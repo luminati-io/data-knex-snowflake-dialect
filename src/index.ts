@@ -1,10 +1,10 @@
-import { Knex, knex } from "knex";
+import { Knex, knex } from "@luminati-io/knex";
 import { defer, fromPairs, isArray, toPairs } from "lodash";
 import { QueryCompiler } from "./query/QueryCompiler";
 import { SchemaCompiler, TableCompiler } from "./schema";
-import * as ColumnBuilder from "knex/lib/schema/columnbuilder";
-import * as ColumnCompiler_MySQL from "knex/lib/dialects/mysql/schema/mysql-columncompiler";
-import * as Transaction from "knex/lib/execution/transaction";
+import * as ColumnBuilder from "@luminati-io/knex/lib/schema/columnbuilder";
+import * as ColumnCompiler_MySQL from "@luminati-io/knex/lib/dialects/mysql/schema/mysql-columncompiler";
+import * as Transaction from "@luminati-io/knex/lib/execution/transaction";
 import { promisify } from "util";
 
 export class SnowflakeDialect extends knex.Client {

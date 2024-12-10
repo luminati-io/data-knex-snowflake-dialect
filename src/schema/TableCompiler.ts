@@ -1,5 +1,5 @@
 // @ts-ignore
-import * as TableCompiler_MySQL from "knex/lib/dialects/mysql/schema/mysql-tablecompiler";
+import * as TableCompiler_MySQL from "@luminati-io/knex/lib/dialects/mysql/schema/mysql-tablecompiler";
 
 export class TableCompiler extends TableCompiler_MySQL {
   constructor(client: any, builder: any) {
